@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nota Piramidi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: tek sütun, sıcak bir "çalışma odası" — üstte şimdi ne çalınıyor, altında kontroller, piramit yolu, ayarlar ve açıklama */
+:root{
+  --bg:#FFF3E8; --surface:#FFFFFF; --surface-2:#FFE8D4; --ink:#3A2B33; --muted:#8C727B;
+  --accent:#EE7F2E; --accent-soft:#FFD9B8; --sun:#FFC94A; --leaf:#5FAE91; --line:#F2DCC9; --night:#4B3B5C;
+  --shadow:0 10px 30px -12px rgba(160,90,40,.25);
+  --f-display:"Fredoka","Nunito",ui-rounded,"Segoe UI",system-ui,sans-serif;
+  --f-body:"Nunito",ui-rounded,"Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#231A1F; --surface:#2E2329; --surface-2:#3A2C33; --ink:#FBEDE4; --muted:#C2A9B1;
+  --accent:#FF9A50; --accent-soft:#5A3A2A; --sun:#FFD36B; --leaf:#7CC8AA; --line:#45353D; --night:#B9A6D6;
+  --shadow:0 10px 30px -12px rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#231A1F; --surface:#2E2329; --surface-2:#3A2C33; --ink:#FBEDE4; --muted:#C2A9B1;
+  --accent:#FF9A50; --accent-soft:#5A3A2A; --sun:#FFD36B; --leaf:#7CC8AA; --line:#45353D; --night:#B9A6D6;
+  --shadow:0 10px 30px -12px rgba(0,0,0,.6); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  background-image:radial-gradient(circle at 85% -10%, var(--accent-soft), transparent 45%),radial-gradient(circle at -10% 30%, var(--surface-2), transparent 40%);
+  background-attachment:fixed}
+.wrap{max-width:680px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:18px}
+header{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;border-radius:50%;background:var(--sun);display:grid;place-items:center;flex:none;box-shadow:inset 0 -4px 0 rgba(0,0,0,.08)}
+h1{font-family:var(--f-display);font-weight:600;font-size:1.7rem;margin:0;line-height:1.1}
+.sub{color:var(--muted);font-size:.92rem;margin:0}
+.card{background:var(--surface);border-radius:22px;padding:20px;box-shadow:var(--shadow)}
+
+/* Şimdi */
+.now{display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.now-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.note-name{font-family:var(--f-display);font-weight:600;font-size:clamp(2.4rem,9vw,3.4rem);line-height:1;margin-top:4px}
+.note-sub{color:var(--muted);font-weight:600}
+.bars{display:flex;gap:6px;align-items:center}
+.bars span{width:14px;height:14px;border-radius:50%;background:var(--surface-2);border:2px solid var(--line);transition:background .15s}
+.bars span.done{background:var(--leaf);border-color:var(--leaf)}
+.bars span.cur{background:var(--accent);border-color:var(--accent)}
+.bars span.quiet{border-style:dashed;border-color:var(--night)}
+.bars-label{font-size:.8rem;color:var(--muted);font-weight:700;text-align:right;margin-top:4px}
+
+.strip{display:grid;gap:4px;height:70px}
+.seg{background:var(--surface-2);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:800;font-size:.8rem;color:var(--muted);
+  transition:background .08s, transform .08s, color .08s;min-width:0;overflow:hidden;white-space:nowrap}
+.seg .hand{font-size:.7rem;font-weight:800;opacity:.75}
+.seg.hit{background:var(--accent);color:#fff;transform:scaleY(1.08)}
+.seg.beat{box-shadow:inset 0 3px 0 var(--sun)}
+.strip.n16 .seg{font-size:.66rem;border-radius:7px}
+.strip.n16 .seg .hand{font-size:.62rem}
+.beats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.beats span{height:6px;border-radius:3px;background:var(--line);transition:background .06s}
+.beats span.on{background:var(--sun)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);font-weight:600}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+.cover{position:absolute;inset:0;background:var(--surface);display:grid;place-items:center;text-align:center;z-index:2;padding:20px}
+.cover .big{font-family:var(--f-display);font-size:5rem;font-weight:600;color:var(--accent);line-height:1}
+.cover p{margin:6px 0 0;color:var(--muted);font-weight:700}
+.quietcover .moon{font-family:var(--f-display);font-size:2rem;color:var(--night);font-weight:600;line-height:1.2}
+
+.next{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;color:var(--muted);font-weight:700;border-top:2px dashed var(--line);padding-top:12px}
+.next b{color:var(--ink)}
+
+/* Kontroller */
+.controls{display:flex;flex-direction:column;gap:16px}
+.bpm-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bpm-box{display:flex;align-items:center;gap:8px}
+.round{width:46px;height:46px;border-radius:50%;border:none;background:var(--surface-2);color:var(--ink);font-size:1.5rem;font-weight:800;cursor:pointer;font-family:var(--f-display)}
+.round:hover{background:var(--accent-soft)}
+#bpmInput{width:92px;font-family:var(--f-display);font-size:2.2rem;font-weight:600;text-align:center;border:none;background:transparent;color:var(--ink);padding:0;-moz-appearance:textfield}
+#bpmInput::-webkit-outer-spin-button,#bpmInput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.bpm-unit{font-weight:800;color:var(--muted);font-size:.85rem;letter-spacing:.06em}
+.actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+.play{border:none;background:var(--accent);color:#fff;font-family:var(--f-display);font-weight:600;font-size:1.25rem;
+  padding:14px 28px;border-radius:999px;cursor:pointer;box-shadow:0 6px 0 -1px color-mix(in srgb,var(--accent) 60%, #000 40%);transition:transform .08s;min-width:150px}
+.play:active{transform:translateY(3px);box-shadow:0 3px 0 -1px color-mix(in srgb,var(--accent) 60%, #000 40%)}
+.play.pause{background:var(--ink);color:var(--bg);box-shadow:0 6px 0 -1px var(--muted)}
+.reset{border:none;background:var(--surface-2);color:var(--ink);border-radius:999px;padding:14px 18px;font-weight:800;font-family:var(--f-body);cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.vols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.vols label{font-size:.85rem;font-weight:700;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+/* Piramit yolu */
+.pyr-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+h2{font-family:var(--f-display);font-weight:600;font-size:1.2rem;margin:0}
+.small{font-size:.85rem;color:var(--muted);font-weight:600}
+.pyr{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;align-items:end;height:120px}
+.step{display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;height:100%;border:none;background:none;padding:0;cursor:pointer;gap:6px;font-family:var(--f-body)}
+.step .blk{border-radius:8px 8px 4px 4px;background:var(--surface-2);transition:background .2s, transform .1s;position:relative}
+.step .lbl{font-size:.72rem;font-weight:800;color:var(--muted);text-align:center}
+.step:hover .blk{background:var(--accent-soft);transform:translateY(-2px)}
+.step.done .blk{background:var(--leaf);opacity:.55}
+.step.cur .blk{background:var(--accent);opacity:1}
+.step.cur .lbl{color:var(--accent)}
+.step .blk.qt::after{content:"";position:absolute;top:5px;left:50%;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--night)}
+
+/* Ayarlar */
+.settings{display:flex;flex-direction:column;gap:16px}
+.set-row{display:flex;flex-direction:column;gap:6px}
+.set-row .lab{font-weight:800;font-size:.9rem}
+.set-row .hint{font-size:.82rem;color:var(--muted);font-weight:600;margin:0}
+.seg-ctl{display:flex;gap:4px;background:var(--surface-2);border-radius:999px;padding:4px;flex-wrap:wrap;width:fit-content;max-width:100%}
+.seg-ctl button{border:none;background:transparent;color:var(--ink);font-weight:800;font-family:var(--f-body);font-size:.88rem;padding:8px 14px;border-radius:999px;cursor:pointer}
+.seg-ctl button[aria-pressed="true"]{background:var(--surface);box-shadow:0 2px 6px rgba(0,0,0,.12);color:var(--accent)}
+
+/* Açıklama ve not */
+.explain p{margin:8px 0 0;max-width:62ch}
+.math{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.math span{background:var(--surface-2);border-radius:999px;padding:5px 12px;font-weight:800;font-size:.85rem}
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--sun);color:#3A2B33;border-radius:20px 20px 20px 6px;padding:14px 18px;font-weight:700}
+.tip .face{font-family:var(--f-display);font-size:1.4rem;line-height:1}
+
+/* Uyarılar */
+.modal-bg{position:fixed;inset:0;background:rgba(40,20,25,.45);display:grid;place-items:center;z-index:20;padding:16px}
+.modal{background:var(--surface);border-radius:24px;padding:24px;max-width:360px;width:100%;text-align:center;box-shadow:var(--shadow)}
+.modal h3{font-family:var(--f-display);font-weight:600;font-size:1.5rem;margin:6px 0}
+.modal p{color:var(--muted);margin:0 0 18px;font-weight:600}
+.modal .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{border:none;border-radius:999px;padding:11px 20px;font-weight:800;font-family:var(--f-body);font-size:.95rem;cursor:pointer}
+.btn.pri{background:var(--accent);color:#fff}
+.btn.sec{background:var(--surface-2);color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--leaf);color:#fff;
+  padding:12px 20px;border-radius:999px;font-weight:800;z-index:30;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center}
+.rate{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--surface);border:2px solid var(--night);
+  border-radius:20px;padding:14px 16px;z-index:25;box-shadow:var(--shadow);width:min(420px, calc(100% - 32px));text-align:center}
+.rate p{margin:0 0 10px;font-weight:800}
+.rate .btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn.ok{background:var(--leaf);color:#fff}
+.records{display:flex;flex-direction:column;gap:12px}
+.rec-top{display:flex;gap:12px;flex-wrap:wrap}
+.rec-box{flex:1;min-width:130px;background:var(--surface-2);border-radius:16px;padding:12px 14px}
+.rec-box .num{font-family:var(--f-display);font-size:2rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.rec-box .cap{font-size:.78rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.hist li{display:flex;justify-content:space-between;gap:10px;font-weight:700;font-size:.9rem;border-bottom:1px dashed var(--line);padding-bottom:6px;font-variant-numeric:tabular-nums}
+.hist li span:last-child{color:var(--muted)}
+.addrec{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.addrec label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:800;color:var(--muted);flex:1;min-width:120px}
+.addrec input{font:inherit;font-weight:700;color:var(--ink);background:var(--surface-2);border:2px solid transparent;border-radius:12px;padding:10px 12px;width:100%}
+.addrec input:focus{border-color:var(--sun);outline:none}
+.hist{max-height:280px;overflow-y:auto}
+.hist li{align-items:center}
+.hist .tag{font-size:.72rem;font-weight:800;color:var(--muted);background:var(--surface-2);border-radius:999px;padding:2px 8px;margin-left:8px}
+.hist .del{border:none;background:none;color:var(--muted);font-weight:800;cursor:pointer;padding:4px 8px;border-radius:8px;font-family:var(--f-body)}
+.hist .del.sure{background:var(--accent);color:#fff}
+.hist .right{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-family:var(--f-body);font-size:11px;font-weight:700}
+.note{font-size:.82rem;color:var(--muted);font-weight:600;margin:0}
+.newrec{display:inline-block;background:var(--sun);color:#3A2B33;border-radius:999px;padding:4px 12px;font-weight:800;font-size:.85rem;margin-bottom:8px}
+.done-card{text-align:center}
+.done-card h2{font-size:1.6rem}
+footer{text-align:center;color:var(--muted);font-size:.8rem;font-weight:600}
+@media (max-width:440px){.actions{margin-left:0;width:100%}.play{flex:1}.vols{grid-template-columns:1fr}.pyr{gap:3px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 26 26"><ellipse cx="13" cy="15" rx="10" ry="5" fill="#fff" stroke="#3A2B33" stroke-width="2"/><path d="M3 15v3c0 3 4.5 5 10 5s10-2 10-5v-3" fill="none" stroke="#3A2B33" stroke-width="2"/><path d="M8 3l5 9M18 3l-5 9" stroke="#3A2B33" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div>
+      <h1>Nota Piramidi</h1>
+      <p class="sub">Birlikten 16'lığa çık, sonra yavaşça geri in.</p>
+    </div>
+  </header>
+
+  <section class="card now" aria-live="polite">
+    <div class="now-top">
+      <div>
+        <div class="eyebrow" id="stepLabel">Adım 1 / 10</div>
+        <div class="note-name" id="noteName">Birlik</div>
+        <div class="note-sub" id="noteSub">Ölçüde 1 vuruş</div>
+      </div>
+      <div>
+        <div class="bars" id="bars" aria-label="Ölçü"><span></span><span></span><span></span><span></span></div>
+        <div class="bars-label" id="barLabel">Ölçü 1 / 4</div>
+      </div>
+    </div>
+    <div class="strip" id="strip"></div>
+    <div class="beats" id="beats" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Snare: senin vuruşun</span><span><i style="background:var(--sun)"></i>Metronom tıkı</span><span>R: sağ el · L: sol el</span></div>
+    <div class="next"><span>Sırada: <b id="nextName">İkilik</b></span><span id="leftLabel">40 ölçü kaldı</span></div>
+    <div class="cover" id="countin" hidden>
+      <div><div class="big" id="countNum">1</div><p>Hazırlan, bagetler sayıyor…</p></div>
+    </div>
+    <div class="cover quietcover" id="quiet" hidden>
+      <div><div class="moon">Şşş… sen devam et</div><p>Tık yok, ekran yok. Sayıyı içinden tut.</p></div>
+    </div>
+  </section>
+
+  <div class="tip" id="tip"><span class="face">:)</span><span id="tipText"></span></div>
+
+  <section class="card controls">
+    <div class="bpm-row">
+      <div class="bpm-box">
+        <button class="round" id="minus" aria-label="Tempoyu 1 azalt">−</button>
+        <div style="text-align:center">
+          <input id="bpmInput" type="number" min="30" max="220" value="60" inputmode="numeric" aria-label="BPM">
+          <div class="bpm-unit">BPM</div>
+        </div>
+        <button class="round" id="plus" aria-label="Tempoyu 1 artır">+</button>
+      </div>
+      <div class="actions">
+        <button class="reset" id="reset" title="Birlikten baştan">Baştan</button>
+        <button class="play" id="play">Başla</button>
+      </div>
+    </div>
+    <input type="range" id="bpmSlider" min="30" max="220" value="60" aria-label="Tempo sürgüsü">
+    <div class="vols">
+      <label for="snareVol">Snare sesi <input type="range" id="snareVol" min="0" max="100" value="85"></label>
+      <label for="clickVol">Metronom sesi <input type="range" id="clickVol" min="0" max="100" value="60"></label>
+    </div>
+    <p class="note">iPhone'da ses gelmiyorsa telefonun yanındaki sessiz mod düğmesini kapat. Sessiz moddayken site ses çıkaramaz.</p>
+  </section>
+
+  <section class="card">
+    <div class="pyr-head"><h2>Piramit yolu</h2><span class="small">Bir basamağa dokun, oradan başla</span></div>
+    <div class="pyr" id="pyr"></div>
+  </section>
+
+  <section class="card records">
+    <div class="pyr-head" style="margin:0"><h2>Rekorların</h2><span class="small">Sadece baştan sona bitirilen turlar sayılır</span></div>
+    <div class="rec-top">
+      <div class="rec-box"><div class="cap">En iyi tempo</div><div class="num" id="bestBpm">–</div></div>
+      <div class="rec-box"><div class="cap">Kayıt sayısı</div><div class="num" id="runCount">0</div></div>
+    </div>
+    <form class="addrec" id="addRec">
+      <label for="recDate">Tarih <input type="date" id="recDate" required></label>
+      <label for="recBpm">BPM <input type="number" id="recBpm" min="20" max="300" inputmode="numeric" placeholder="örn. 72" required></label>
+      <button class="btn pri" type="submit">Kaydet</button>
+    </form>
+    <div id="chartBox"></div>
+    <ul class="hist" id="hist"></ul>
+    <p class="note" id="histEmpty">Henüz kayıt yok. Yukarıdan elle ekleyebilirsin. Piramidi birlikten başlayıp sonuna kadar çaldığında da tempo buraya kendiliğinden yazılır.</p>
+    <p class="note">Kayıtlar bu cihazda saklanır.</p>
+  </section>
+
+  <section class="card settings">
+    <h2>Ayarlar</h2>
+    <div class="set-row">
+      <span class="lab">İlk vuruş hangi elle?</span>
+      <div class="seg-ctl" id="handCtl">
+        <button data-v="R" aria-pressed="true">Sağ el (R)</button>
+        <button data-v="L" aria-pressed="false">Sol el (L)</button>
+      </div>
+    </div>
+    <div class="set-row">
+      <span class="lab">İçsel metronom testi</span>
+      <p class="hint">Antrenmanın içinde bir anda ses de ekran da kaybolur. Sen çalmaya devam edersin. Ses geri geldiğinde tıkla aynı yerdeysen içindeki metronom sağlam demektir.</p>
+      <div class="seg-ctl" id="testCtl">
+        <button data-v="off" aria-pressed="true">Kapalı</button>
+        <button data-v="some" aria-pressed="false">Ara sıra</button>
+        <button data-v="all" aria-pressed="false">Her basamakta</button>
+      </div>
+    </div>
+    <div class="set-row" id="lenRow">
+      <span class="lab">Sessizlik ne kadar sürsün?</span>
+      <div class="seg-ctl" id="lenCtl">
+        <button data-v="1" aria-pressed="true">1 ölçü</button>
+        <button data-v="2" aria-pressed="false">2 ölçü</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card explain">
+    <div class="eyebrow">Bu nota ne demek?</div>
+    <h2 id="exTitle" style="margin-top:4px">Birlik nota</h2>
+    <p id="exText"></p>
+    <div class="math" id="exMath"></div>
+  </section>
+
+  <section class="card done-card" id="doneCard" hidden>
+    <div class="newrec" id="newRec" hidden>Yeni rekor!</div>
+    <h2>Harika iş, piramidi bitirdin!</h2>
+    <p class="small" id="doneText">40 ölçünün hepsini çaldın.</p>
+    <p class="small" id="testSum" hidden></p>
+    <button class="btn pri" id="again">Bir tur daha</button>
+  </section>
+
+  <footer>Kulaklık takarsan tıkı daha net duyarsın.</footer>
+</div>
+
+<div class="modal-bg" id="warnModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="warnTitle">
+    <div style="font-size:2.4rem;font-family:var(--f-display)">✋</div>
+    <h3 id="warnTitle">Sakin ol champ, emin misin?</h3>
+    <p id="warnText">Tempoyu bir anda çok artırıyorsun.</p>
+    <div class="btns">
+      <button class="btn sec" id="warnNo">Geri al</button>
+      <button class="btn pri" id="warnYes">Evet, eminim</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<div class="rate" id="rate" hidden role="dialog" aria-label="İçsel metronom testi">
+  <p id="rateQ">Döndük! Tıkla aynı yerde miydin?</p>
+  <div class="btns">
+    <button class="btn ok" id="rateYes">Tam yerindeydim</button>
+    <button class="btn sec" id="rateNo">Kaymışım</button>
+  </div>
+</div>
+
+<script>
+const SEQ=[1,2,4,8,16,16,8,4,2,1];
+const NAMES={1:"Birlik",2:"İkilik",4:"Dörtlük",8:"Sekizlik",16:"16'lık"};
+const LEVEL={1:1,2:2,4:3,8:4,16:5};
+const SUB={1:"Ölçüde 1 vuruş",2:"Ölçüde 2 vuruş",4:"Her tıka 1 vuruş",8:"Her tıka 2 vuruş",16:"Her tıka 4 vuruş"};
+const LABELS={1:["1 (2 3 4)"],2:["1 (2)","3 (4)"],4:["1","2","3","4"],8:["1","ve","2","ve","3","ve","4","ve"],16:["1","e","ve","a","2","e","ve","a","3","e","ve","a","4","e","ve","a"]};
+const EXPLAIN={
+  1:{t:"Birlik nota",p:"Bir birlik nota 4 tık sürer, yani bütün ölçüyü tek başına doldurur. Ölçüye 1 tane sığar. Vur, sonra metronomla birlikte 4'e kadar say. Sabır notasıdır, en zoru beklemektir.",m:["4 tık sürer","Ölçüye 1 tane","1 birlik = 2 ikilik"]},
+  2:{t:"İkilik nota",p:"İkilik, birliğin yarısıdır ve 2 tık sürer. Ölçüye 2 tane sığar. Vuruşların 1. ve 3. tıka denk gelir, aradaki tıkları içinden say.",m:["2 tık sürer","Ölçüye 2 tane","2 ikilik = 1 birlik"]},
+  4:{t:"Dörtlük nota",p:"Dörtlük, ikiliğin yarısıdır ve 1 tık sürer. Ölçüye 4 tane sığar. Metronomun her tıkına bir vuruş; senin sesin tıkın tam üstüne binsin.",m:["1 tık sürer","Ölçüye 4 tane","4 dörtlük = 1 birlik"]},
+  8:{t:"Sekizlik nota",p:"Sekizlik, dörtlüğün yarısıdır ve yarım tık sürer. Ölçüye 8 tane sığar. Her tıka 2 vuruş düşer: \"1 ve 2 ve 3 ve 4 ve\". \"ve\" vuruşu iki tıkın tam ortasına gelsin.",m:["Yarım tık sürer","Ölçüye 8 tane","2 sekizlik = 1 dörtlük"]},
+  16:{t:"16'lık nota",p:"16'lık, sekizliğin yarısıdır ve çeyrek tık sürer. Ölçüye 16 tane sığar. Her tıka 4 vuruş: \"1 e ve a 2 e ve a…\". Eller dengeli olsun, sağ-sol-sağ-sol.",m:["Çeyrek tık sürer","Ölçüye 16 tane","4 tane 16'lık = 1 dörtlük"]}
+};
+const TIPS=["Omuzlarını bırak, gevşek eller daha güzel çalar.","Bagetin zıplamasına izin ver, işin yarısını o yapar.","Tıkı dinle, onunla yarışma. O senin arkadaşın.","Bir vuruş kaçarsa durma, bir sonrakine yetiş. Olur böyle şeyler.","Nefes almayı unutma :)","İki baget de aynı yükseklikten düşsün.","Yavaş ve temiz, hızlı ve dağınıktan her zaman iyidir.","Sesli saymak utanılacak şey değil, profesyoneller de sayar."];
+const SPECIAL={0:"Sabır zamanı. Vur ve tıkları say, acele yok.",4:"Tepeye geldin! 16'lıklar burada, eller gevşek kalsın.",5:"Bir tur daha 16'lık. Az kaldı, sonra iniş başlıyor.",6:"İniş başladı. Hızlanma isteğine direnmeye çalış.",9:"Son durak: birlik. Bekle, say, nefes al."};
+const IDLE_TIP="Hazır olduğunda tempoyu seç ve Başla'ya bas. Yavaş başlamak hiç ayıp değil.";
+
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem("np_"+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("np_"+k,JSON.stringify(v))}catch(e){}}};
+
+let bpm=store.get("bpm",60);
+let firstHand=store.get("hand","R");
+let testMode=store.get("test","off");
+let quietLen=store.get("qlen",1);
+let quietSteps=new Set();
+let shownSection=-1;
+
+/* Durum: g = ana akıştaki 16'lık konumu (0..639). cin = kalan giriş sayımı slotu. */
+let state="idle"; // idle | playing | paused | done
+let g=0,cin=0,nextTime=0,timer=null,queue=[],raf=null,wake=null,lastQuiet=false;
+
+/* Piramit basamakları */
+const pyr=$("pyr");
+SEQ.forEach((n,i)=>{
+  const b=document.createElement("button");b.className="step";b.setAttribute("aria-label",`${i+1}. basamak: ${NAMES[n]}, buradan başla`);
+  b.innerHTML=`<span class="blk" style="height:${LEVEL[n]*17}%"></span><span class="lbl">${n}</span>`;
+  b.onclick=()=>jumpTo(i);pyr.appendChild(b);
+});
+
+function quietBars(){return quietLen===2?[1,2]:[2]}
+function isQuiet(s,b){return quietSteps.has(s)&&quietBars().includes(b)}
+function planQuiet(){
+  quietSteps=new Set();
+  if(testMode==="all")SEQ.forEach((_,i)=>quietSteps.add(i));
+  else if(testMode==="some"){const pool=[0,1,2,3,4,5,6,7,8,9];while(quietSteps.size<3){quietSteps.add(pool.splice(Math.floor(Math.random()*pool.length),1)[0])}}
+  markQuietSteps();
+}
+function markQuietSteps(){[...pyr.children].forEach((b,i)=>b.firstChild.classList.toggle("qt",testMode==="all"||(testMode==="some"&&quietSteps.has(i))))}
+
+function handFor(i){const alt=firstHand==="R"?["R","L"]:["L","R"];return alt[i%2]}
+function renderSection(s){
+  shownSection=s;
+  const n=SEQ[s];
+  $("stepLabel").textContent=`Adım ${s+1} / 10`;
+  $("noteName").textContent=NAMES[n];
+  $("noteSub").textContent=SUB[n];
+  $("nextName").textContent=s<9?NAMES[SEQ[s+1]]:"Bitiş";
+  const strip=$("strip");strip.innerHTML="";strip.className="strip"+(n===16?" n16":"");
+  strip.style.gridTemplateColumns=`repeat(${n},1fr)`;
+  LABELS[n].forEach((t,i)=>{const d=document.createElement("div");d.className="seg";if((i*16/n)%4===0)d.classList.add("beat");
+    d.innerHTML=`<span>${t}</span><span class="hand">${handFor(i)}</span>`;strip.appendChild(d)});
+  [...pyr.children].forEach((d,i)=>{d.classList.toggle("done",i<s);d.classList.toggle("cur",i===s)});
+  const e=EXPLAIN[n];$("exTitle").textContent=e.t;$("exText").textContent=e.p;
+  $("exMath").innerHTML=e.m.map(x=>`<span>${x}</span>`).join("");
+  if(state==="playing")setTip(SPECIAL[s]||TIPS[Math.floor(Math.random()*TIPS.length)]);
+}
+function setTip(t){$("tipText").textContent=t}
+function renderBar(s,b){
+  [...$("bars").children].forEach((d,i)=>{d.className=i<b?"done":i===b?"cur":"";if(isQuiet(s,i)&&i>b)d.classList.add("quiet")});
+  $("barLabel").textContent=`Ölçü ${b+1} / 4`;
+  $("leftLabel").textContent=`${40-(s*4+b)} ölçü kaldı`;
+}
+
+/* Ses */
+let ctx=null,master,snareG,clickG,noiseBuf;
+function initAudio(){
+  if(ctx)return;
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  master=ctx.createGain();master.gain.value=.9;master.connect(ctx.destination);
+  snareG=ctx.createGain();snareG.connect(master);clickG=ctx.createGain();clickG.connect(master);applyVols();
+  noiseBuf=ctx.createBuffer(1,ctx.sampleRate*.5,ctx.sampleRate);
+  const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+}
+function applyVols(){if(!ctx)return;const s=$("snareVol").value/100,c=$("clickVol").value/100;snareG.gain.value=s*s;clickG.gain.value=c*c}
+function env(gn,t,peak,dec){gn.gain.setValueAtTime(0.0001,t);gn.gain.exponentialRampToValueAtTime(peak,t+.002);gn.gain.exponentialRampToValueAtTime(0.0001,t+dec)}
+function snare(t,acc){
+  const v=acc?1:.72;
+  const n=ctx.createBufferSource();n.buffer=noiseBuf;const hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=1200;
+  const ng=ctx.createGain();env(ng,t,.8*v,.18);n.connect(hp).connect(ng).connect(snareG);n.start(t);n.stop(t+.22);
+  const o=ctx.createOscillator();o.type="triangle";o.frequency.setValueAtTime(230,t);o.frequency.exponentialRampToValueAtTime(160,t+.08);
+  const og=ctx.createGain();env(og,t,.7*v,.1);o.connect(og).connect(snareG);o.start(t);o.stop(t+.12);
+}
+function click(t,first){const o=ctx.createOscillator();o.type="sine";o.frequency.value=first?2000:1500;const gn=ctx.createGain();env(gn,t,.6,.04);o.connect(gn).connect(clickG);o.start(t);o.stop(t+.06)}
+function sticks(t){
+  const n=ctx.createBufferSource();n.buffer=noiseBuf;const bp=ctx.createBiquadFilter();bp.type="bandpass";bp.frequency.value=3200;bp.Q.value=4;
+  const ng=ctx.createGain();env(ng,t,1.4,.05);n.connect(bp).connect(ng).connect(master);n.start(t);n.stop(t+.07);
+  [1850,2650].forEach(f=>{const o=ctx.createOscillator();o.frequency.value=f;const gn=ctx.createGain();env(gn,t,.35,.045);o.connect(gn).connect(master);o.start(t);o.stop(t+.06)});
+}
+
+/* Zamanlayıcı */
+const AHEAD=.12;
+function slotDur(){return 60/bpm/4}
+function schedule(){
+  while(nextTime<ctx.currentTime+AHEAD){
+    if(cin>0){const slot=16-cin;if(slot%4===0){sticks(nextTime);queue.push({t:nextTime,count:slot/4+1})}cin--;nextTime+=slotDur();continue}
+    const s=Math.floor(g/64);
+    if(s>=10){queue.push({t:nextTime,end:true});clearInterval(timer);timer=null;return}
+    const b=Math.floor((g%64)/16),slot=g%16,n=SEQ[s],step=16/n,q=isQuiet(s,b);
+    if(!q){if(slot%step===0)snare(nextTime,slot===0);if(slot%4===0)click(nextTime,slot===0)}
+    queue.push({t:nextTime,g,q});
+    nextTime+=slotDur();g++;
+  }
+}
+function draw(){
+  if(state!=="playing")return;
+  const now=ctx.currentTime;
+  while(queue.length&&queue[0].t<=now){
+    const ev=queue.shift();
+    if(ev.end){finish();return}
+    if(ev.count){$("countin").hidden=false;$("countNum").textContent=ev.count;continue}
+    updateUI(ev);
+  }
+  raf=requestAnimationFrame(draw);
+}
+function updateUI(ev){
+  $("countin").hidden=true;
+  const cur=ev.g,s=Math.floor(cur/64),b=Math.floor((cur%64)/16),slot=cur%16,n=SEQ[s],step=16/n;
+  if(ev.q!==lastQuiet){
+    $("quiet").hidden=!ev.q;
+    if(!ev.q&&lastQuiet)askRate();
+    lastQuiet=ev.q;
+  }
+  if(s!==shownSection)renderSection(s);
+  if(slot===0)renderBar(s,b);
+  if(ev.q)return;
+  if(slot%4===0)[...$("beats").children].forEach((d,i)=>d.classList.toggle("on",i===slot/4));
+  if(slot%step===0){
+    const segs=$("strip").children;[...segs].forEach(d=>d.classList.remove("hit"));
+    const el=segs[slot/step];if(el){el.classList.add("hit");setTimeout(()=>el.classList.remove("hit"),Math.min(slotDur()*step*600,220))}
+  }
+}
+/* Test puanlama */
+let tests=[],rateOpen=-1,fullRun=false;
+function askRate(){
+  tests.push(null);rateOpen=tests.length-1;
+  $("rateQ").textContent=`${tests.length}. test: Döndük! Tıkla aynı yerde miydin?`;
+  $("rate").hidden=false;
+}
+function answer(v){if(rateOpen>=0)tests[rateOpen]=v;rateOpen=-1;$("rate").hidden=true;toast(v?"Süper, içindeki metronom sağlam!":"Olsun, bu test tam da bunun için var. Bir dahakine!")}
+$("rateYes").onclick=()=>answer(true);
+$("rateNo").onclick=()=>answer(false);
+
+/* Rekorlar ve geçmiş: her kayıt {id, bpm, day:"YYYY-AA-GG", t, src:"tur"|"elle"} */
+function pad(n){return String(n).padStart(2,"0")}
+function todayISO(){const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function fmtDay(iso){const [y,m,d]=iso.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("tr-TR",{day:"numeric",month:"long",year:"numeric"})}
+function loadHist(){
+  let h=store.get("hist2",null);
+  if(!h){ // eski sürümden taşı
+    const old=store.get("records",{hist:[]});h=(old.hist||[]).map((x,i)=>({id:"o"+i,bpm:x.bpm,day:todayISO(),t:Date.now()-i,src:"tur"}));store.set("hist2",h);
+  }
+  return h;
+}
+function sortHist(h){return h.slice().sort((a,b)=>a.day===b.day?b.t-a.t:(a.day<b.day?1:-1))}
+let delArm=null;
+function renderRec(){
+  const h=sortHist(loadHist());
+  const best=h.reduce((m,x)=>Math.max(m,x.bpm),0);
+  $("bestBpm").textContent=best?best+" BPM":"–";$("runCount").textContent=h.length;
+  $("hist").innerHTML=h.map(x=>`<li><span>${fmtDay(x.day)}<span class="tag">${x.src==="tur"?"tam tur":"elle"}</span></span><span class="right"><b style="color:var(--ink)">${x.bpm} BPM</b><button class="del" data-id="${x.id}" aria-label="Kaydı sil">×</button></span></li>`).join("");
+  $("histEmpty").hidden=h.length>0;
+  [...$("hist").querySelectorAll(".del")].forEach(b=>b.onclick=()=>{
+    if(delArm!==b.dataset.id){delArm=b.dataset.id;renderRec();const nb=$("hist").querySelector(`[data-id="${delArm}"]`);if(nb){nb.textContent="Sil?";nb.classList.add("sure")}return}
+    store.set("hist2",loadHist().filter(x=>x.id!==b.dataset.id));delArm=null;renderRec();toast("Kayıt silindi.");
+  });
+  renderChart(h);
+}
+function renderChart(h){
+  const box=$("chartBox");
+  // Günlük en yüksek tempo, eskiden yeniye
+  const byDay={};h.forEach(x=>{byDay[x.day]=Math.max(byDay[x.day]||0,x.bpm)});
+  const days=Object.keys(byDay).sort();
+  if(days.length<2){box.innerHTML="";return}
+  const W=600,H=170,L=40,R=14,T=14,B=28;
+  const vals=days.map(d=>byDay[d]);let lo=Math.min(...vals),hi=Math.max(...vals);
+  if(hi-lo<10){const mid=(hi+lo)/2;lo=Math.floor(mid-5);hi=Math.ceil(mid+5)}
+  const x=i=>L+(W-L-R)*i/(days.length-1),y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  const pts=vals.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const area=`${L},${H-B} ${pts} ${x(days.length-1).toFixed(1)},${H-B}`;
+  const short=iso=>{const [yy,m,d]=iso.split("-").map(Number);return new Date(yy,m-1,d).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})};
+  const last=vals.length-1;
+  box.innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Günlük en iyi tempo grafiği">
+    <line x1="${L}" x2="${W-R}" y1="${y(hi)}" y2="${y(hi)}" stroke="var(--line)" stroke-dasharray="4 4"/>
+    <line x1="${L}" x2="${W-R}" y1="${y(lo)}" y2="${y(lo)}" stroke="var(--line)" stroke-dasharray="4 4"/>
+    <text x="${L-6}" y="${y(hi)+4}" text-anchor="end">${hi}</text>
+    <text x="${L-6}" y="${y(lo)+4}" text-anchor="end">${lo}</text>
+    <polygon points="${area}" fill="var(--accent-soft)" opacity=".6"/>
+    <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    ${vals.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="${i===last?6:3.5}" fill="${i===last?"var(--accent)":"var(--surface)"}" stroke="var(--accent)" stroke-width="2"/>`).join("")}
+    <text x="${L}" y="${H-8}">${short(days[0])}</text>
+    <text x="${W-R}" y="${H-8}" text-anchor="end">${short(days[last])}</text>
+  </svg>`;
+}
+function addEntry(b,day,src){
+  const h=loadHist();const prevBest=h.reduce((m,x)=>Math.max(m,x.bpm),0);
+  h.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),bpm:b,day,t:Date.now(),src});
+  if(h.length>300)h.splice(0,h.length-300);
+  store.set("hist2",h);renderRec();return b>prevBest;
+}
+function saveRun(){return addEntry(bpm,todayISO(),"tur")}
+$("recDate").value=todayISO();
+$("addRec").addEventListener("submit",e=>{
+  e.preventDefault();
+  const b=Math.round(Number($("recBpm").value)),day=$("recDate").value;
+  if(!day){toast("Bir tarih seç.");return}
+  if(!(b>=20&&b<=300)){toast("BPM 20 ile 300 arasında olmalı.");return}
+  const isNew=addEntry(b,day,"elle");$("recBpm").value="";
+  toast(isNew?`Yeni rekor: ${b} BPM!`:`${fmtDay(day)}: ${b} BPM kaydedildi.`);
+});
+
+function setPlayBtn(){
+  const p=$("play");
+  p.textContent=state==="playing"?"Duraklat":state==="paused"?"Devam et":"Başla";
+  p.classList.toggle("pause",state==="playing");
+}
+async function run(fromG){
+  initAudio();if(ctx.state==="suspended")await ctx.resume();
+  clearInterval(timer);cancelAnimationFrame(raf);
+  if(fromG===0){fullRun=true;tests=[]}
+  g=fromG;cin=16;queue=[];lastQuiet=false;$("quiet").hidden=true;
+  nextTime=ctx.currentTime+.08;state="playing";setPlayBtn();
+  $("doneCard").hidden=true;
+  const s=Math.floor(g/64);renderSection(s);renderBar(s,Math.floor((g%64)/16));
+  timer=setInterval(schedule,25);schedule();raf=requestAnimationFrame(draw);
+  try{if(navigator.wakeLock&&!wake)wake=await navigator.wakeLock.request("screen")}catch(e){}
+}
+function halt(){
+  clearInterval(timer);timer=null;cancelAnimationFrame(raf);queue=[];
+  $("countin").hidden=true;$("quiet").hidden=true;lastQuiet=false;
+  [...$("beats").children].forEach(d=>d.classList.remove("on"));
+  [...$("strip").children].forEach(d=>d.classList.remove("hit"));
+  try{wake&&wake.release()}catch(e){}wake=null;
+}
+function pause(){
+  // Kaldığı ölçünün başına dön, devam edince girişi sayıp oradan başla
+  const s=Math.floor(g/64);let b=Math.floor((g%64)/16);
+  halt();
+  g=Math.min(s*64+b*16,639);g=g-(g%16);
+  state="paused";setPlayBtn();
+  renderSection(Math.floor(g/64));renderBar(Math.floor(g/64),Math.floor((g%64)/16));
+  setTip("Mola. Hazır olunca Devam et'e bas, bagetler sayıp bu ölçüden başlayacak.");
+}
+function jumpTo(i){
+  const target=i*64;if(i>0)fullRun=false;
+  if(state==="playing"){planQuietKeep();run(target);return}
+  halt();g=target;state="paused";setPlayBtn();$("doneCard").hidden=true;
+  renderSection(i);renderBar(i,0);
+  setTip(`${i+1}. basamak seçildi: ${NAMES[SEQ[i]]}. Devam et'e basınca buradan başlıyoruz.`);
+}
+function planQuietKeep(){if(testMode!=="off"&&quietSteps.size===0)planQuiet()}
+function reset(){halt();fullRun=false;tests=[];$("rate").hidden=true;g=0;state="idle";setPlayBtn();$("doneCard").hidden=true;renderSection(0);renderBar(0,0);setTip(IDLE_TIP)}
+function finish(){
+  halt();state="done";g=0;setPlayBtn();
+  [...pyr.children].forEach(d=>{d.classList.add("done");d.classList.remove("cur")});
+  [...$("bars").children].forEach(d=>d.className="done");$("leftLabel").textContent="Bitti!";
+  $("doneText").textContent=`${bpm} BPM'de piramidi tamamladın. Temiz geldiyse bir dahaki tura biraz artırabilirsin.`;
+  const isNew=fullRun?saveRun():false;$("newRec").hidden=!isNew;
+  if(!fullRun)$("doneText").textContent+=" Bu tur ortadan başladığı için rekorlara yazılmadı.";
+  fullRun=false;
+  const answered=tests.filter(t=>t!==null),hit=answered.filter(Boolean).length;
+  $("testSum").hidden=tests.length===0;
+  if(tests.length)$("testSum").textContent=`İçsel metronom: ${answered.length} testten ${hit} tanesinde tam yerindeydin.`+(answered.length<tests.length?` (${tests.length-answered.length} test cevapsız kaldı.)`:"");
+  $("doneCard").hidden=false;setTip("Kendinle gurur duy, bu iş emek ister.");
+  $("doneCard").scrollIntoView({behavior:"smooth",block:"center"});
+}
+$("play").onclick=()=>{
+  if(state==="playing")pause();
+  else if(state==="paused"){planQuietKeep();run(g)}
+  else{planQuiet();run(0)}
+};
+$("reset").onclick=reset;
+$("again").onclick=()=>{planQuiet();run(0)};
+
+/* Tempo ve uyarılar */
+let pending=null;
+function setBpmUI(v){$("bpmInput").value=v;$("bpmSlider").value=v}
+function commit(v){bpm=v;setBpmUI(v);store.set("bpm",v)}
+function requestBpm(v){
+  v=Math.round(Math.max(30,Math.min(220,Number(v)||bpm)));
+  const diff=v-bpm;
+  if(diff>5){pending=v;$("warnText").textContent=`${bpm} BPM'den ${v} BPM'e, bir anda ${diff} artış. Temiz çalabileceğine eminsen devam.`;$("warnModal").hidden=false;$("warnYes").focus();return}
+  if(diff<-5)toast("Önce tekniği oturtup sonra hızlanmak akıllıca. Aferin!");
+  commit(v);
+}
+$("warnYes").onclick=()=>{$("warnModal").hidden=true;commit(pending);pending=null};
+$("warnNo").onclick=()=>{$("warnModal").hidden=true;pending=null;setBpmUI(bpm)};
+$("minus").onclick=()=>requestBpm(bpm-1);
+$("plus").onclick=()=>requestBpm(bpm+1);
+$("bpmSlider").oninput=e=>{$("bpmInput").value=e.target.value};
+$("bpmSlider").onchange=e=>requestBpm(e.target.value);
+$("bpmInput").onchange=e=>requestBpm(e.target.value);
+$("bpmInput").onkeydown=e=>{if(e.key==="Enter")e.target.blur()};
+let tt=null;
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3200)}
+
+/* Ayarlar */
+function segCtl(id,val,onPick){
+  const el=$(id);const sync=v=>[...el.children].forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===String(v))));
+  sync(val);[...el.children].forEach(b=>b.onclick=()=>{sync(b.dataset.v);onPick(b.dataset.v)});
+}
+segCtl("handCtl",firstHand,v=>{firstHand=v;store.set("hand",v);renderSection(shownSection<0?0:shownSection)});
+segCtl("testCtl",testMode,v=>{testMode=v;store.set("test",v);$("lenRow").hidden=v==="off";planQuiet();
+  if(v!=="off")toast(v==="all"?"Her basamakta bir sessiz an olacak.":"Rastgele 3 basamakta sessiz an olacak.")});
+segCtl("lenCtl",quietLen,v=>{quietLen=Number(v);store.set("qlen",quietLen)});
+$("lenRow").hidden=testMode==="off";
+["snareVol","clickVol"].forEach(id=>{$(id).value=store.get(id,$(id).value);$(id).oninput=()=>{applyVols();store.set(id,$(id).value)}});
+
+setBpmUI(bpm);planQuiet();renderRec();renderSection(0);renderBar(0,0);setTip(IDLE_TIP);
+</script>
+</body>
+</html>
