@@ -26,6 +26,8 @@
   --shadow:0 10px 30px -12px rgba(0,0,0,.6); color-scheme:dark}
 
 *{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
   background-image:radial-gradient(circle at 85% -10%, var(--accent-soft), transparent 45%),radial-gradient(circle at -10% 30%, var(--surface-2), transparent 40%);
   background-attachment:fixed}
@@ -79,7 +81,7 @@ h1{font-family:var(--f-display);font-weight:600;font-size:1.7rem;margin:0;line-h
 .bpm-box{display:flex;align-items:center;gap:8px}
 .round{width:46px;height:46px;border-radius:50%;border:none;background:var(--surface-2);color:var(--ink);font-size:1.5rem;font-weight:800;cursor:pointer;font-family:var(--f-display)}
 .round:hover{background:var(--accent-soft)}
-#bpmInput{width:92px;font-family:var(--f-display);font-size:2.2rem;font-weight:600;text-align:center;border:none;background:transparent;color:var(--ink);padding:0;-moz-appearance:textfield}
+#bpmInput{width:104px;height:48px;line-height:48px;font-family:var(--f-display);font-size:2.2rem;font-weight:600;text-align:center;border:none;border-radius:12px;background:transparent;color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:1;padding:0;-webkit-appearance:none;appearance:none;-moz-appearance:textfield}
 #bpmInput::-webkit-outer-spin-button,#bpmInput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .bpm-unit{font-weight:800;color:var(--muted);font-size:.85rem;letter-spacing:.06em}
 .actions{margin-left:auto;display:flex;gap:10px;align-items:center}
